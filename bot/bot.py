@@ -1,5 +1,3 @@
-# bot/telegram_bot.py
-import os
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -22,7 +20,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Глобальные модели
 asr_model = None
 asr_processor = None
 nlu_model = None
@@ -54,7 +51,7 @@ def load_models():
                     return text
         formatter = TextFormatter()
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update):
     user = update.effective_user
     keyboard = [[InlineKeyboardButton("🎙️ Отправить голосовое", callback_data="record_voice")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -67,22 +64,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-async def record_voice_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def record_voice_button(update: Update):
     await update.callback_query.answer()
     await update.callback_query.edit_message_text("🎙️ Отправьте голосовое сообщение.")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Голосовое сообщение получено...")
     load_models()
-    user = update.effective_user
     voice = update.message.voice
 
     try:
-        #скачиваем аудио
         file = await context.bot.get_file(voice.file_id)
         await file.download_to_drive("temp_voice.ogg")
-
-        #загружаем аудио
         import librosa
         audio_array, sr = librosa.load("temp_voice.ogg", sr=16000)
 
@@ -97,8 +90,6 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         #NLU
         intent, entity = nlu_model.predict(raw_text)
-
-        #форматирование
         formatted_text = formatter.apply_formatting(raw_text, entity, intent)
 
         await update.message.reply_text(
