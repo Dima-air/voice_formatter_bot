@@ -12,7 +12,6 @@ from telegram.ext import (
 )
 import torch
 
-# Настройки
 TELEGRAM_TOKEN = ""
 WHISPER_MODEL_PATH = "C:/Users/User/PycharmProjects/models/whisper-small-ru-final"
 NLU_MODEL_PATH = "C:/Users/User/PycharmProjects/models/nlu_model"
@@ -33,13 +32,13 @@ def load_models():
     global asr_model, asr_processor, nlu_model, formatter
     if asr_model is None:
         from transformers import WhisperProcessor, WhisperForConditionalGeneration
-        logger.info("Загрузка дообученной Whisper...")
+        logger.info("Загрузка дообученной Whisper..")
         asr_processor = WhisperProcessor.from_pretrained(WHISPER_MODEL_PATH)
         asr_model = WhisperForConditionalGeneration.from_pretrained(WHISPER_MODEL_PATH)
         asr_model.eval()
     if nlu_model is None:
         from nlu.nlu_model import NLUModel
-        logger.info("Загрузка NLU-модели...")
+        logger.info("Загрузка NLU-модели..")
         nlu_model = NLUModel(NLU_MODEL_PATH)
     if formatter is None:
         class TextFormatter:
@@ -79,15 +78,15 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     voice = update.message.voice
 
     try:
-        # Скачиваем аудио
+        #скачиваем аудио
         file = await context.bot.get_file(voice.file_id)
         await file.download_to_drive("temp_voice.ogg")
 
-        # Загружаем аудио
+        #загружаем аудио
         import librosa
         audio_array, sr = librosa.load("temp_voice.ogg", sr=16000)
 
-        # ASR: голос → текст
+        #ASR
         inputs = asr_processor(audio_array, sampling_rate=sr, return_tensors="pt")
         with torch.no_grad():
             predicted_ids = asr_model.generate(
@@ -96,15 +95,14 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         raw_text = asr_processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
 
-        # NLU: понимание команды → (intent, entity)
+        #NLU
         intent, entity = nlu_model.predict(raw_text)
 
-        # Форматирование
+        #форматирование
         formatted_text = formatter.apply_formatting(raw_text, entity, intent)
 
-        # Отправка результата
         await update.message.reply_text(
-            f"🎙️ Распознано: <i>{raw_text}</i>\n\n"
+            f"Распознано: <i>{raw_text}</i>\n\n"
             f"✅ Результат:\n{formatted_text}",
             parse_mode="HTML"
         )
@@ -118,7 +116,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(record_voice_button, pattern="^record_voice$"))
     application.add_handler(MessageHandler(filters.VOICE, handle_voice))
-    logger.info("Бот запущен...")
+    logger.info("Бот запущен")
     application.run_polling()
 
 if __name__ == "__main__":
