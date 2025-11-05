@@ -103,7 +103,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(
             f"Распознано: <i>{raw_text}</i>\n\n"
-            f"✅ Результат:\n{formatted_text}",
+            f" Результат:\n{formatted_text}",
             parse_mode="HTML"
         )
 
