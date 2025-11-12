@@ -10,7 +10,7 @@ from telegram.ext import (
 )
 import torch
 
-TELEGRAM_TOKEN = ""
+TELEGRAM_TOKEN = "."
 WHISPER_MODEL_PATH = "C:/Users/User/PycharmProjects/models/whisper-small-ru-final"
 NLU_MODEL_PATH = "C:/Users/User/PycharmProjects/models/nlu_model"
 
@@ -51,7 +51,7 @@ def load_models():
                     return text
         formatter = TextFormatter()
 
-async def start(update: Update):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     keyboard = [[InlineKeyboardButton("🎙️ Отправить голосовое", callback_data="record_voice")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -64,7 +64,7 @@ async def start(update: Update):
         reply_markup=reply_markup
     )
 
-async def record_voice_button(update: Update):
+async def record_voice_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.callback_query.answer()
     await update.callback_query.edit_message_text("🎙️ Отправьте голосовое сообщение.")
 
